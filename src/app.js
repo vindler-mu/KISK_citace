@@ -1,7 +1,7 @@
 // Uživatelské rozhraní: tři kroky (Vložit → Zkontrolovat → Výsledky). Veškerá logika je v lib/.
 // Data z citací a databází vkládáme jen jako text, nikdy jako HTML.
 import { norm, safeHref } from "../lib/text.js";
-import { MAX_INPUT, cleanCitations, cleanRaw, extractBibliography, isBackReference, isStructured, parseInput, stripPageArtifacts } from "../lib/parse.js";
+import { MAX_INPUT, cleanCitations, cleanRaw, extractBibliography, isBackReference, isStructured, parseInput, stripPageArtifacts, suspicion } from "../lib/parse.js";
 import { createClient, sourceAdvice } from "../lib/net.js";
 import { dbTests, enc } from "../lib/sources.js";
 import { plausible } from "../lib/compare.js";
@@ -94,12 +94,6 @@ function toReview(opts = {}) {
 }
 
 // Podezřelé kousky: velmi krátké (rozdělená citace) nebo velmi dlouhé s více roky (slepené citace)
-function suspicion(t) {
-  if (t.length < 40) return "Velmi krátké, nejde o kousek předchozí citace?";
-  const years = (t.match(/\b(19|20)\d\d\b/g) || []).length;
-  if (t.length > 420 && years >= 3) return "Velmi dlouhé, nejsou to dvě citace?";
-  return "";
-}
 
 // Klíč pro hledání duplicit: text bez interpunkce, diakritiky a čísla v seznamu
 const dupKey = t => norm(cleanRaw(String(t).replace(/^\s*(\[\d+\]|\d+[.)])\s*/, "")));

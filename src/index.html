@@ -45,6 +45,11 @@
   .key:focus-within { outline: 3px solid var(--ink); outline-offset: 3px; }
   kbd { font: 700 12px/1 system-ui, sans-serif; display: inline-block; min-width: 22px; padding: 4px 6px 3px; border: 1.5px solid var(--ink-3); border-bottom-width: 3px; border-radius: 6px; color: var(--ink-2); text-align: center; }
 
+  /* ---- Pilotní provoz: výrazný červený pruh pod hlavičkou ---- */
+  .pilot { background: var(--bad); color: #fff; border-bottom: 2px solid var(--ink); }
+  .pilot .wrap { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; font-size: 15px; }
+  .pilot strong { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border: 2px solid #fff; border-radius: 6px; padding: 1px 8px; }
+
   /* ---- Hlavička ---- */
   .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
   .top { border-bottom: 2px solid var(--ink); background: var(--paper); }
@@ -377,6 +382,12 @@ FORM: pinned brief (logo KISK), bez losování. -->
     </button>
   </div>
 </header>
+<div class="pilot" role="note" aria-label="Upozornění na pilotní provoz">
+  <div class="wrap">
+    <strong>Pilotní verze</strong>
+    <span>RefTrace je v testovacím provozu. Výsledky můžou obsahovat chyby. Než citaci označíte za chybnou, ověřte ji ručně.</span>
+  </div>
+</div>
 <section class="settings" id="settings" hidden aria-label="Nastavení">
   <div class="wrap">
     <div>

@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RaJDC0me2bjoM8d1Zj2Af058PgwF2rst855KgEG3XPs='; style-src 'unsafe-inline'; img-src data:; connect-src https://api.crossref.org https://api.datacite.org https://api.openalex.org https://api.semanticscholar.org https://api.ies.ed.gov https://www.googleapis.com https://openlibrary.org https://www.knihovny.cz https://doi.org; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jv41/wQfaTe2pWUHpeG/+gCP0tK2/NEcEDHb5bQYELs='; style-src 'unsafe-inline'; img-src data:; connect-src https://api.crossref.org https://api.datacite.org https://api.openalex.org https://api.semanticscholar.org https://api.ies.ed.gov https://www.googleapis.com https://openlibrary.org https://www.knihovny.cz https://doi.org; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>RefTrace</title>
@@ -45,6 +45,11 @@
   .key input { position: absolute; width: 1px; height: 1px; opacity: 0; }
   .key:focus-within { outline: 3px solid var(--ink); outline-offset: 3px; }
   kbd { font: 700 12px/1 system-ui, sans-serif; display: inline-block; min-width: 22px; padding: 4px 6px 3px; border: 1.5px solid var(--ink-3); border-bottom-width: 3px; border-radius: 6px; color: var(--ink-2); text-align: center; }
+
+  /* ---- Pilotní provoz: výrazný červený pruh pod hlavičkou ---- */
+  .pilot { background: var(--bad); color: #fff; border-bottom: 2px solid var(--ink); }
+  .pilot .wrap { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; font-size: 15px; }
+  .pilot strong { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border: 2px solid #fff; border-radius: 6px; padding: 1px 8px; }
 
   /* ---- Hlavička ---- */
   .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
@@ -378,6 +383,12 @@ FORM: pinned brief (logo KISK), bez losování. -->
     </button>
   </div>
 </header>
+<div class="pilot" role="note" aria-label="Upozornění na pilotní provoz">
+  <div class="wrap">
+    <strong>Pilotní verze</strong>
+    <span>RefTrace je v testovacím provozu. Výsledky můžou obsahovat chyby. Než citaci označíte za chybnou, ověřte ji ručně.</span>
+  </div>
+</div>
 <section class="settings" id="settings" hidden aria-label="Nastavení">
   <div class="wrap">
     <div>
@@ -1120,14 +1131,36 @@ function joinLines(a, b) {
 // Rozdělí blok, ve kterém jsou omylem dvě citace APA za sebou
 function splitMerged(block) {
   const re = /\.\s+(?=[\p{Lu}][\p{L}'’\-]+,\s(?:\p{Lu}\.\s?(?:-\s?\p{Lu}\.)?\s?)+[^()]{0,160}?\((?:\d{4}[a-z]?|n\.\s?d\.|b\.\s?r\.)\))/gu;
+  // Za odkazem začíná další citace s institucí jako autorem: „…/gpt-4o/ OpenAI. (2025, April 29).“
+  const reUrl = /https?:\/\/\S+(?=\s+[\p{Lu}][\p{L}\p{N}&'’\- ]{1,80}?\.\s\((?:\d{4}[a-z]?|n\.\s?d\.|b\.\s?r\.)(?:,[^)]{1,30})?\))/gu;
+  const cuts = [];
+  let m;
+  while ((m = re.exec(block))) cuts.push(m.index + 1);
+  while ((m = reUrl.exec(block))) cuts.push(m.index + m[0].length);
+  cuts.sort((a, b) => a - b);
   const out = [];
-  let last = 0, m;
-  while ((m = re.exec(block))) {
-    const piece = block.slice(last, m.index + 1).trim();
-    if (piece.length > 15) { out.push(piece); last = m.index + 1; }
+  let last = 0;
+  for (const cut of cuts) {
+    const piece = block.slice(last, cut).trim();
+    if (piece.length > 15) { out.push(piece); last = cut; }
   }
   out.push(block.slice(last).trim());
   return out.filter(Boolean);
+}
+
+// Upozornění v kroku 2: řádek vypadá jako kousek citace, nebo jako dvě citace slepené dohromady
+function suspicion(t) {
+  t = String(t || "");
+  if (t.length < 40) return "Velmi krátké, nejde o kousek předchozí citace?";
+  // Dva roky v závorce (APA: „(2019).“, „(2025, April 29).“), „(Original work published 1950)“ se nepočítá
+  const parenYears = (t.match(/\((?:19|20)\d\d[a-z]?(?:,[^)]{0,30})?\)/g) || []).length;
+  // Dva odkazy: URL a DOI se počítají dohromady, DOI uvnitř URL jen jednou
+  const urls = t.match(/https?:\/\/\S+/g) || [];
+  const bareDois = (t.replace(/https?:\/\/\S+/g, " ").match(/\b10\.\d{4,9}\/\S+/g) || []).length;
+  if (parenYears >= 2 || urls.length + bareDois >= 2) return "Možná jde o dvě citace. Zkontrolujte rozdělení.";
+  const years = (t.match(/\b(19|20)\d\d\b/g) || []).length;
+  if (t.length > 420 && years >= 3) return "Velmi dlouhé, nejsou to dvě citace?";
+  return "";
 }
 
 function parsePlain(text) {
@@ -1779,6 +1812,9 @@ function compare(e, c) {
   }
 
   // ---- ČASOPIS ----
+  const REPOSITORY = /\b(repositor(y|ium|io)|research portal|dspace|eprints|digital commons|institutional repository|archive ouverte|zenodo|figshare)\b|\b(university|universit[äéà]t?|univerzit[ay]|akademi|college|institut[eo]?)\b.*\b(portal|repository|research|archive|library|digital)\b/i;
+  // „02“ = „2“; norm() navíc sjednotí pomlčky (1–2 = 1-2)
+  const normNum = (v) => norm(String(v).trim().replace(/(^|\D)0+(?=\d)/g, "$1"));
   let journalScore = 0.5;
   const pre = isPreprint(c);
   // Zprávy institucí, zákony, normy a práce nevycházejí v časopisech (databáze tu často uvádí repozitář)
@@ -1788,6 +1824,8 @@ function compare(e, c) {
     add("journal", "Databáze zná jen preprint (" + (c.journal || c.publisher || "verze před recenzí") + "), ne článek v časopise uvedeném v citaci. Ověřte ručně, že v časopise opravdu vyšel.");
   }
   else if (!c.journal || isBook || e.grey || pre) checks.journal = ["na", "netýká se"];
+  // Databáze místo časopisu uvádí repozitář (univerzitní portál, DSpace…): s časopisem to nesrovnávat
+  else if (REPOSITORY.test(c.journal)) checks.journal = ["na", "databáze uvádí repozitář"];
   else {
     let s;
     if (e.kind === "structured") s = e.journal ? Math.max(symSim(tokens(e.journal), tokens(c.journal)), abbrContainment(tokens(c.journal), new Set(tokens(e.journal)))) : null;
@@ -1806,11 +1844,11 @@ function compare(e, c) {
     let compared = false, wrong = false;
     if (b.volume && c.volume) {
       compared = true;
-      if (norm(b.volume) !== norm(c.volume)) { wrong = true; add("biblio", "Ročník (volume) v citaci " + b.volume + ", v databázi " + c.volume + "."); }
+      if (normNum(b.volume) !== normNum(c.volume)) { wrong = true; add("biblio", "Ročník (volume) v citaci " + b.volume + ", v databázi " + c.volume + "."); }
     }
     if (b.issue && c.issue) {
       compared = true;
-      if (norm(b.issue) !== norm(c.issue)) { wrong = true; add("biblio", "Číslo (issue) v citaci " + b.issue + ", v databázi " + c.issue + "."); }
+      if (normNum(b.issue) !== normNum(c.issue)) { wrong = true; add("biblio", "Číslo (issue) v citaci " + b.issue + ", v databázi " + c.issue + "."); }
     }
     if (b.pages && c.pages) {
       compared = true;
@@ -2417,12 +2455,6 @@ function toReview(opts = {}) {
 }
 
 // Podezřelé kousky: velmi krátké (rozdělená citace) nebo velmi dlouhé s více roky (slepené citace)
-function suspicion(t) {
-  if (t.length < 40) return "Velmi krátké, nejde o kousek předchozí citace?";
-  const years = (t.match(/\b(19|20)\d\d\b/g) || []).length;
-  if (t.length > 420 && years >= 3) return "Velmi dlouhé, nejsou to dvě citace?";
-  return "";
-}
 
 // Klíč pro hledání duplicit: text bez interpunkce, diakritiky a čísla v seznamu
 const dupKey = t => norm(cleanRaw(String(t).replace(/^\s*(\[\d+\]|\d+[.)])\s*/, "")));
