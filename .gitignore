@@ -1,0 +1,23 @@
+# Tajemství (nikdy do veřejného repozitáře)
+.env*
+*.pem
+*.key
+credentials*
+.Renviron
+
+# Sady citací pro měření přesnosti (npm run eval): mohou obsahovat citace z prací studujících
+eval/
+
+# Interní dokumenty a testy: zůstávají jen v lokální kopii autora
+TODO.md
+PRODUCT.md
+SPEC.md
+test/
+
+# Referenční verze, není součástí aplikace
+overovac-citaci.html
+
+# Prostředí a sestavení
+node_modules/
+venv/
+renv/library/

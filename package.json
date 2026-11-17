@@ -1,0 +1,14 @@
+{
+  "name": "overovac-citaci",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ověřovač citací pro učitele: statická stránka bez serveru",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "build": "node scripts/build.js",
+    "test": "node --test",
+    "eval": "node scripts/evaluate.js"
+  }
+}
