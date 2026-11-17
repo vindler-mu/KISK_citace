@@ -2,7 +2,7 @@
 
 Pomocník pro kontrolu bibliografických údajů. Vyučující vloží seznam literatury ze studentské práce a aplikace u každé citace zjistí, jestli zdroj existuje ve veřejných databázích, jestli sedí jeho údaje a jestli článek nebyl stažen.
 
-**Aplikace:** https://UZIVATEL.github.io/REPOZITAR/ (po nasazení doplnit)
+**Aplikace:** https://vindler-mu.github.io/KISK_citace/
 
 Autor: Vojtěch Velísek, KISK FF MU. Vytvořeno ve spolupráci s AI asistentem Claude Opus 5.5 (rodina modelů Claude 5, Anthropic).
 

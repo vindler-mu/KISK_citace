@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/XniA4l/chQOnFRDq2R1WzQziXakCh3YgUKWGU7nNx4='; style-src 'unsafe-inline'; img-src data:; connect-src https://api.crossref.org https://api.datacite.org https://api.openalex.org https://api.semanticscholar.org https://api.ies.ed.gov https://www.googleapis.com https://openlibrary.org https://www.knihovny.cz https://doi.org; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RaJDC0me2bjoM8d1Zj2Af058PgwF2rst855KgEG3XPs='; style-src 'unsafe-inline'; img-src data:; connect-src https://api.crossref.org https://api.datacite.org https://api.openalex.org https://api.semanticscholar.org https://api.ies.ed.gov https://www.googleapis.com https://openlibrary.org https://www.knihovny.cz https://doi.org; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>RefTrace</title>
@@ -611,7 +611,8 @@ FORM: pinned brief (logo KISK), bez losování. -->
 
       <h3>3. Porovnání citace s nalezeným záznamem</h3>
       <ul>
-        <li>Texty se porovnávají bez diakritiky, interpunkce a běžných spojek a předložek. Funguje to pro latinku, azbuku, řečtinu i čínštinu. Různý zápis složených slov („pre-trained“, „pretrained“, „pre trained“) se považuje za shodu.</li>
+        <li>Texty se porovnávají bez diakritiky, interpunkce a běžných spojek a předložek. Funguje to pro latinku, azbuku, řečtinu i čínštinu. Různý zápis složených slov („pre-trained“, „pretrained“, „pre trained“) se považuje za shodu. Příjmení se spojovníkem („Cruz-Aguilar“) se najde v obou podobách.</li>
+        <li><strong>Úklid dat z databází:</strong> databáze občas posílají text s kódovanými znaky z HTML (např. „&amp;amp;“ místo „&amp;“). Aplikace je u všech záznamů převede zpět na běžné znaky, jinak by hlásila falešné nesrovnalosti. Převod je čistě textový, nic se nevkládá jako HTML.</li>
         <li><strong>Název:</strong> podíl slov, která se shodují (s tolerancí jednoho překlepu). 100 % = shoda, od 85 % = téměř shodný, od 60 % = částečná shoda, méně = jiné dílo. Slova navíc v názvu citace snižují skóre.</li>
         <li><strong>Autoři:</strong> porovnávají se příjmení prvních tří autorů, s tolerancí jednoho překlepu a přepisu z jiného písma (Выготский = Vygotsky = Vygotskij).</li>
         <li><strong>Rok:</strong> odchylka o jeden rok je nesrovnalost (online first × tištěné číslo). U knihy s uvedeným pozdějším vydáním se jiný rok za chybu nepovažuje.</li>
@@ -656,6 +657,7 @@ FORM: pinned brief (logo KISK), bez losování. -->
         <li>Návrh vychází i ze srovnání existujících nástrojů (CheckIfExist, RefChecker a další, studie z roku 2026). U nich byla zhruba polovina skutečných citací chybně označena jako podezřelá, hlavně kvůli zdrojům mimo databáze. Kód z těchto nástrojů převzatý není.</li>
         <li>Logika je oddělená od stránky (čtení citací, síť, databáze, porovnání, ověření, přehled a exporty). Na stránce je jen uživatelské rozhraní.</li>
         <li>Automatické testy (přes 160, vedené v lokální kopii autora) ověřují čtení citací ve všech podporovaných stylech, porovnání, okrajové případy (šedá literatura, jiná písma, zkrácená DOI, preprinty…), výpadky databází i bezpečnostní pravidla. Síť je v nich simulovaná, takže výsledky nezávisí na stavu databází.</li>
+        <li><strong>Zdrojový kód</strong> je veřejný pod licencí MIT: <a href="https://github.com/vindler-mu/KISK_citace" rel="noopener noreferrer" target="_blank">github.com/vindler-mu/KISK_citace</a>.</li>
       </ul>
 
       <div class="actions"><button id="techBack" type="button" class="plain">Zpět na úvod</button></div>
@@ -1355,7 +1357,8 @@ const ALLOWED_HOSTS = [
 // Adresy, které se objevují jen jako odkazy pro učitele. Aplikace na ně nikdy nic neposílá.
 const DISPLAY_ONLY_HOSTS = [
   "openalex.org", "eric.ed.gov", "www.semanticscholar.org",
-  "scholar.google.com", "www.google.com", "www.libraryresearch.com"
+  "scholar.google.com", "www.google.com", "www.libraryresearch.com",
+  "github.com" // odkaz na zdrojový kód v technickém popisu
 ];
 
 // Chyba spojení nebo vyčerpaný limit. To NENÍ totéž co "nenalezeno".
